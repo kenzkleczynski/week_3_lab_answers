@@ -8,7 +8,7 @@ from io import StringIO  # For reading string data as file
 import requests
 
 
-
+# _______________________________ COLLEGE DATA SET _____________________________________________________
 # %% STEP ONE ____________________________________________________________________________________________
 
 # load college data
@@ -17,39 +17,65 @@ college = pd.read_csv(college_url)
 print(college.info())
 
 # Observations:
-    # Alot of missing values (especially in sat columns, endownment columns, vsa columns, nicknames)
-    # 
-    
-
-
-# Problems that could be sovled with this data:
-    #
-
-# Questions:
-    # 
-
-
-
-# %% load job data
-job_url = "https://raw.githubusercontent.com/DG1606/CMS-R-2020/master/Placement_Data_Full_Class.csv"
-job = pd.read_csv(job_url)
-print(job.info())
-
-
-# Observations:
-    # Currency is in Rupee
-    # All of the _p (percentages) are just the grade on that "final" exam on a 100 point scale
-    # India has differnt school boards/pathways for education that have different curriculumns and rigor
+    # Alot of missing values like in sat columns, endownment columns, vsa columns, nicknames)
+    # Some uncessesayr co,umns like webURL, nickname, index, unitID
+    # Some columns with a lot of unique values like institution name, city, address
 
 # Problems that could be sovled with this data:
-    # Predicting salaries based on what type of degree you have
-    # Predicting salary based on grades you got in school
-    # Accessing how you school board (in india) affects your salary/employment chances
+    #Help a student choose a college based on their prefrences
+    #Help a student predict colleges they have a change of getting into based on their stats
+    # A college could use it to compare themselves to others, like in the same state/size/type
 
 # Questions:
-    # Are there gender pay gaps?
-    # Does the type of degree you have affect your salary?
-    # Does your grades in school affect your salary?
+    # Does awards impact or correlate with gradutaion rates?
+    # Does your SAT score limit your chances of getting into certain colleges by states or private vs public?
+    # Does being in a college of certain state imact your finacial aid amount?
+
+
+
 # %% STEP TWO ____________________________________________________________________________________________
 
+# Write a generic question that this dataset could address:
+    # Does state and private vs public impact financial aid amount?
 
+# What is a independent Business Metric for your problem?
+    # Average financial aid amount per student
+
+# Data preparation:
+
+# Correct variable type/class as needed:
+# Level as 2 distinct values and control as 3 distinct values so make to categorical
+cols = ["level", "control"]
+college[cols] = college[cols].astype('category')
+# Year is float but should be int
+college["vsa_year"] = college["vsa_year"].astype('Int64')
+# Make hbsu and flagship boolean
+college["hbcu"] = college["hbcu"].astype('boolean')
+college["flagship"] = college["flagship"].astype('boolean')
+
+
+# Collapse factor levels as needed: *
+
+
+# One-hot encoding factor variables:
+college_encoded = pd.get_dummies(college, columns=cols)
+# get_dummies() creates new binary columns for each category level
+# Original categorical columns are removed, replaced by indicator columns
+# Check the result
+college_encoded.info()
+
+
+
+# Normalize the continuous variables:
+
+
+# Drop unneeded variables:
+# Create target variable if needed:
+# Calculate the prevalence of the target variable:
+# Create the necessary data partitions (Train,Tune,Test):
+
+# %%
+
+
+
+# %%
