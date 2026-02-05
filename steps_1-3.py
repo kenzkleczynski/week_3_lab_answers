@@ -139,7 +139,7 @@ college_clean = college_clean.dropna(subset=["aid_f"])
 # %% Create the necessary data partitions (Train,Tune,Test: 60/20/20 split
 # Split before normalizing to prevent data leakage
 # First split: Separate training data from the rest
-train, leftover = train_test_split(
+c_train, c_leftover = train_test_split(
     college_clean,
     train_size=.6,
     stratify=college_clean.aid_f
@@ -147,30 +147,30 @@ train, leftover = train_test_split(
 # stratify=college_clean.aid_f ensures class proportions are preserved
 # This reduces sampling error and gives more reliable results
 # Verify the split sizes
-print(f"Training set shape: {train.shape}")
-print(f"Leftover set shape: {leftover.shape}")
+print(f"Training set shape: {c_train.shape}")
+print(f"Leftover set shape: {c_leftover.shape}")
 
 # Second split: Split remaining data into tuning and test sets (50/50)
-tune, test = train_test_split(
-    leftover,
+c_tune, c_test = train_test_split(
+    c_leftover,
     train_size=.5,
-    stratify=leftover.aid_f
+    stratify=c_leftover.aid_f
 )
-print(f"Tune set shape: {tune.shape}")
-print(f"Test set shape: {test.shape}")
+print(f"Tune set shape: {c_tune.shape}")
+print(f"Test set shape: {c_test.shape}")
 
 #check prevalence in each set to show stratification worked
 print("\nTraining prevalence:")
-print((train.aid_f.value_counts(normalize=True) * 100).round(2))
+print((c_train.aid_f.value_counts(normalize=True) * 100).round(2))
 print("\nTuning prevalence:")
-print((tune.aid_f.value_counts(normalize=True) * 100).round(2))
+print((c_tune.aid_f.value_counts(normalize=True) * 100).round(2))
 print("\nTest prevalence:")
-print((test.aid_f.value_counts(normalize=True) * 100).round(2))
+print((c_test.aid_f.value_counts(normalize=True) * 100).round(2))
 
 # %% Normalize the continuous variables:
 # test on one column first to see the difference
-student_count_before = train[['student_count']]
-student_count_normalized = MinMaxScaler().fit_transform(train[['student_count']])
+student_count_before = c_train[['student_count']]
+student_count_normalized = MinMaxScaler().fit_transform(c_train[['student_count']])
 
 # plot to see the difference before and after scaling
 student_count_before.plot.density()
@@ -178,17 +178,23 @@ pd.DataFrame(student_count_normalized).plot.density()
 plt.show()
 
 # show numeric columns except target variable
-numeric_cols = list(train.select_dtypes('number').columns)
+numeric_cols = list(c_train.select_dtypes('number').columns)
 numeric_cols = [col for col in numeric_cols if col != 'aid_f']
 
 # Fit scaler ONLY on training data
 scaler = MinMaxScaler()
-scaler.fit(train[numeric_cols])
+scaler.fit(c_train[numeric_cols])
 
 # apply to all three sets using the same fitted scaler
-train[numeric_cols] = scaler.transform(train[numeric_cols])
-tune[numeric_cols] = scaler.transform(tune[numeric_cols])
-test[numeric_cols] = scaler.transform(test[numeric_cols])
+c_train[numeric_cols] = scaler.transform(c_train[numeric_cols])
+print(c_train.describe())
+
+c_tune[numeric_cols] = scaler.transform(c_tune[numeric_cols])
+print(c_tune.describe())
+
+c_test[numeric_cols] = scaler.transform(c_test[numeric_cols])
+print(c_test.describe())
+
 
 # %% STEP TWO - JOB DATA SET ____________________________________________________________________________________________
 
@@ -260,46 +266,63 @@ print(f"Baseline/Prevalence: {prevalence:.2%}")
 #68.84% - models should beat this accuracy to be useful
 
 # %% Create the necessary data partitions (Train,Tune,Test): 60/20/20 split
-# split before normalizing to prevent data leakage
+# Split before normalizing to prevent data leakage
 # First split: Separate training data from the rest
-train_job, leftover_job = train_test_split(
+j_train, j_leftover = train_test_split(
     job_clean,
     train_size=.6,
     stratify=job_clean.placed
 )
-# stratify ensures class proportions are preserved
+# stratify=job_clean.placed ensures class proportions are preserved
 # This reduces sampling error and gives more reliable results
 # Verify the split sizes
-print(f"Training set shape: {train_job.shape}")
-print(f"Leftover set shape: {leftover_job.shape}")
+print(f"Training set shape: {j_train.shape}")
+print(f"Leftover set shape: {j_leftover.shape}")
 
 # Second split: Split remaining data into tuning and test sets (50/50)
-tune_job, test_job = train_test_split(
-    leftover_job,
+j_tune, j_test = train_test_split(
+    j_leftover,
     train_size=.5,
-    stratify=leftover_job.placed
+    stratify=j_leftover.placed
 )
-print(f"Tune set shape: {tune_job.shape}")
-print(f"Test set shape: {test_job.shape}")
+print(f"Tune set shape: {j_tune.shape}")
+print(f"Test set shape: {j_test.shape}")
 
+# check prevalence in each set to show stratification worked
 print("\nTraining prevalence:")
-print((train_job.placed.value_counts(normalize=True) * 100).round(2))
+print((j_train.placed.value_counts(normalize=True) * 100).round(2))
 print("\nTuning prevalence:")
-print((tune_job.placed.value_counts(normalize=True) * 100).round(2))
+print((j_tune.placed.value_counts(normalize=True) * 100).round(2))
 print("\nTest prevalence:")
-print((test_job.placed.value_counts(normalize=True) * 100).round(2))
+print((j_test.placed.value_counts(normalize=True) * 100).round(2))
 
 # %% Normalize the continuous variables:
-# test on one column first
-ssc_p_normalized = MinMaxScaler().fit_transform(job_clean[['ssc_p']])
-print(ssc_p_normalized[:10])
-job_clean.ssc_p.plot.density()
+# test on one column first to see the difference
+ssc_p_before = j_train[['ssc_p']]
+ssc_p_normalized = MinMaxScaler().fit_transform(j_train[['ssc_p']])
+
+# plot to see the difference before and after scaling
+ssc_p_before.plot.density()
 pd.DataFrame(ssc_p_normalized).plot.density()
-#apply to all numeric_cols
-# select_dtypes('number') finds all int and float columns
-numeric_cols = list(job_clean.select_dtypes('number'))
-# apply min-max scaling to all numeric columns
-job_clean[numeric_cols] = MinMaxScaler().fit_transform(job_clean[numeric_cols])
+plt.show()
+
+# show numeric columns except target variable
+numeric_cols_job = list(j_train.select_dtypes('number').columns)
+numeric_cols_job = [col for col in numeric_cols_job if col != 'placed']
+
+# Fit scaler ONLY on training data
+scaler_job = MinMaxScaler()
+scaler_job.fit(j_train[numeric_cols_job])
+
+# apply to all three sets using the same fitted scaler
+j_train[numeric_cols_job] = scaler_job.transform(j_train[numeric_cols_job])
+print(j_train.describe())
+
+j_tune[numeric_cols_job] = scaler_job.transform(j_tune[numeric_cols_job])
+print(j_tune.describe())
+
+j_test[numeric_cols_job] = scaler_job.transform(j_test[numeric_cols_job])
+print(j_test.describe())
 
 # %% STEP THREE ____________________________________________________________________________________________
 
